@@ -13,8 +13,10 @@
 </head>
 <body class="bg-slate-50 pb-24 text-slate-900">
 
-    <div id="view-lock" class="fixed inset-0 bg-slate-950 z-[100] flex flex-col items-center justify-center p-6">
-        <div class="text-center mb-10">
+    <div id="view-lock" class="fixed inset-0 bg-slate-950 z-[100] flex flex-col items-center justify-center p-6 text-center">
+        <img src="IMG_5535.png" alt="Oasis Logo" class="w-32 h-32 mb-6 rounded-full border-4 border-blue-500/20 shadow-2xl">
+        
+        <div class="mb-10">
             <h1 class="text-3xl font-black text-blue-500 uppercase tracking-tighter mb-2">Oasis Secure</h1>
             <p class="text-slate-500 text-[10px] uppercase font-bold tracking-[0.3em]">Access Required</p>
         </div>
@@ -45,7 +47,10 @@
     <div id="main-app" class="view-hidden">
         <div class="bg-slate-900 p-5 text-white shadow-xl sticky top-0 z-30">
             <div class="flex justify-between items-center mb-4">
-                <h1 class="text-lg font-black uppercase tracking-tighter text-blue-400">Oasis Tracker</h1>
+                <div class="flex items-center gap-3">
+                    <img src="IMG_5535.png" alt="Logo" class="w-8 h-8 rounded-full border border-blue-500/50">
+                    <h1 class="text-lg font-black uppercase tracking-tighter text-blue-400">Oasis Tracker</h1>
+                </div>
                 <div class="flex gap-2">
                     <button onclick="switchView('log')" id="btn-log" class="text-[10px] font-bold px-3 py-1 rounded-full bg-blue-600">LOG</button>
                     <button onclick="switchView('reports')" id="btn-reports" class="text-[10px] font-bold px-3 py-1 rounded-full bg-slate-700">REPORTS</button>
@@ -91,6 +96,7 @@
                 </div>
                 <button onclick="saveExpense()" class="w-full mt-3 bg-slate-800 text-white py-3 rounded-xl font-bold text-xs uppercase">Record Cash Expense</button>
             </div>
+
             <div id="history-list" class="space-y-3 pb-10"></div>
         </div>
 
@@ -99,11 +105,8 @@
                 <button id="btn-back-reports" onclick="renderMonthList()" class="view-hidden mb-4 flex items-center gap-2 text-blue-600 font-bold text-xs uppercase">
                     <span>← Back to Months</span>
                 </button>
-                
                 <h2 id="reports-title" class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-2 pb-2">Business Archives</h2>
-                
-                <div id="reports-content" class="space-y-3">
-                    </div>
+                <div id="reports-content" class="space-y-3"></div>
             </div>
         </div>
     </div>
@@ -126,8 +129,7 @@
         let unsubscribeLog = null;
         let globalData = {}; 
 
-        // --- PIN LOGIC ---
-        const MASTER_PIN = "1234"; // CHANGE PIN HERE
+        const MASTER_PIN = "1234"; 
         let currentPin = "";
 
         window.pressPin = (num) => {
@@ -177,16 +179,31 @@
                 snapshot.forEach((snapDoc) => {
                     const data = snapDoc.data();
                     if(data.category === "wash") {
+                        const comm = (data.amount * 0.30);
+                        const utils = 10;
+                        const net = data.amount - comm - utils;
                         washCount++; totalSales += data.amount;
-                        staffPoolTotal += (data.amount * 0.30);
+                        staffPoolTotal += comm;
                         if(data.payment === "Cash") cashSales += data.amount;
-                        html += `<div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 ${data.payment === 'Cash' ? 'border-emerald-500' : 'border-blue-500'} flex justify-between items-center mb-2">
-                                    <div>
-                                        <p class="font-black text-lg uppercase leading-none">${data.plate}</p>
-                                        <p class="text-[10px] text-slate-600 font-bold mt-1 capitalize">${data.car_desc || ''}</p>
-                                        <p class="text-[9px] text-slate-400 font-bold uppercase mt-1">${data.payment} • ${data.wash_type || 'Wash'}</p>
+                        html += `<div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 ${data.payment === 'Cash' ? 'border-emerald-500' : 'border-blue-500'} mb-2">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="font-black text-lg uppercase leading-none">${data.plate}</p>
+                                            <p class="text-[10px] text-slate-600 font-bold mt-1 capitalize">${data.car_desc || 'No Description'}</p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="font-black text-blue-600">R${data.amount}</p>
+                                            <p class="text-[8px] uppercase font-bold text-slate-400">${data.payment} • ${data.wash_type}</p>
+                                        </div>
                                     </div>
-                                    <div class="text-right font-bold">R${data.amount}<br><button onclick="deleteEntry('${snapDoc.id}')" class="text-[9px] text-red-300">Delete</button></div>
+                                    <div class="mt-3 pt-2 border-t border-slate-50 flex justify-between items-center">
+                                        <div class="flex gap-3">
+                                            <div class="text-[8px] font-bold text-red-400 uppercase">Comm: R${comm.toFixed(0)}</div>
+                                            <div class="text-[8px] font-bold text-red-400 uppercase">Util: R${utils}</div>
+                                            <div class="text-[8px] font-bold text-emerald-600 uppercase italic">Net: R${net.toFixed(0)}</div>
+                                        </div>
+                                        <button onclick="deleteEntry('${snapDoc.id}')" class="text-[9px] text-red-200 font-bold uppercase hover:text-red-500">Delete</button>
+                                    </div>
                                  </div>`;
                     } else {
                         manualExpenses += data.amount;
@@ -199,35 +216,29 @@
                 const utilityTotal = washCount * 10;
                 document.getElementById('sum-cash-till').innerText = `R${(cashSales - staffPoolTotal - manualExpenses).toFixed(0)}`;
                 document.getElementById('sum-net-profit').innerText = `R${(totalSales - staffPoolTotal - manualExpenses - utilityTotal).toFixed(0)}`;
-                document.getElementById('history-list').innerHTML = html || '<p class="text-center text-slate-400 py-10 text-xs italic tracking-widest uppercase">No Activity</p>';
+                document.getElementById('history-list').innerHTML = html || '<p class="text-center text-slate-400 py-10 text-xs italic tracking-widest uppercase">No Entries</p>';
             });
         };
 
         const processAndRenderReports = async () => {
             const content = document.getElementById('reports-content');
-            content.innerHTML = '<p class="text-center py-10 text-slate-400 text-xs animate-pulse tracking-widest uppercase">Reading Archives...</p>';
-            
+            content.innerHTML = '<p class="text-center py-10 text-slate-400 text-xs animate-pulse tracking-widest uppercase">Syncing...</p>';
             const q = query(collection(db, "entries"), orderBy("timestamp", "desc"));
             const snap = await getDocs(q);
-            
             const months = {}; 
-
             snap.forEach(doc => {
                 const data = doc.data();
                 const dayStr = data.dateStr;
                 if(!dayStr) return;
                 const monthStr = dayStr.slice(0, 7); 
-
                 if(!months[monthStr]) months[monthStr] = { days: {} };
                 if(!months[monthStr].days[dayStr]) months[monthStr].days[dayStr] = { sales: 0, cash: 0, exp: 0, count: 0, comm: 0 };
-
                 const d = months[monthStr].days[dayStr];
                 if(data.category === 'wash') {
                     d.sales += data.amount; d.count++; d.comm += (data.amount * 0.30);
                     if(data.payment === 'Cash') d.cash += data.amount;
                 } else d.exp += data.amount;
             });
-
             globalData = months;
             window.renderMonthList();
         };
@@ -236,10 +247,8 @@
             const content = document.getElementById('reports-content');
             const backBtn = document.getElementById('btn-back-reports');
             const title = document.getElementById('reports-title');
-            
             backBtn.classList.add('view-hidden');
             title.innerText = "Business Archives";
-            
             let html = "";
             Object.keys(globalData).sort().reverse().forEach(m => {
                 let mProfit = 0, mWashes = 0, mExp = 0;
@@ -249,9 +258,7 @@
                     mWashes += d.count;
                     mExp += d.exp;
                 });
-
                 const monthName = new Date(m + "-01").toLocaleString('default', { month: 'long', year: 'numeric' });
-                
                 html += `
                     <button onclick="renderDayList('${m}')" class="w-full bg-white p-5 rounded-3xl flex justify-between items-center border border-slate-200 shadow-sm active:scale-[0.98] transition-all">
                         <div class="text-left">
@@ -260,33 +267,28 @@
                         </div>
                         <div class="text-right">
                             <p class="text-[10px] font-bold text-blue-600">Net: R${mProfit.toFixed(0)}</p>
-                            <p class="text-[9px] font-black text-slate-300 tracking-widest mt-1 uppercase">Open →</p>
+                            <p class="text-[9px] font-black text-slate-300 tracking-widest mt-1">OPEN →</p>
                         </div>
                     </button>`;
             });
-            content.innerHTML = html || '<p class="text-center py-10 text-slate-400 text-xs">NO DATA FOUND</p>';
+            content.innerHTML = html || '<p class="text-center py-10 text-slate-400 text-xs">NO DATA</p>';
         };
 
         window.renderDayList = (monthKey) => {
             const content = document.getElementById('reports-content');
             const backBtn = document.getElementById('btn-back-reports');
             const title = document.getElementById('reports-title');
-            
             backBtn.classList.remove('view-hidden');
             title.innerText = "Breakdown: " + monthKey;
-
             const days = globalData[monthKey].days;
             let html = "";
             Object.keys(days).sort().reverse().forEach(date => {
                 const d = days[date];
                 const profit = d.sales - d.comm - d.exp - (d.count * 10);
                 const till = d.cash - d.comm - d.exp;
-                
                 html += `
                     <div class="bg-white p-4 rounded-2xl flex justify-between items-center border border-slate-200 shadow-sm">
-                        <div><p class="font-black text-xs text-slate-800">${date}</p>
-                             <p class="text-[9px] text-red-500 font-bold uppercase">Expense: R${d.exp.toFixed(0)}</p>
-                        </div>
+                        <div><p class="font-black text-xs text-slate-800">${date}</p><p class="text-[9px] text-red-400 font-bold uppercase">Expenses: R${d.exp.toFixed(0)}</p></div>
                         <div class="flex gap-4">
                             <div class="text-right"><p class="text-[8px] uppercase text-slate-400 font-bold">Till</p><p class="text-xs font-black text-emerald-600">R${till.toFixed(0)}</p></div>
                             <div class="text-right"><p class="text-[8px] uppercase text-slate-400 font-bold">Profit</p><p class="text-xs font-black text-blue-600">R${profit.toFixed(0)}</p></div>
@@ -300,7 +302,7 @@
 
         window.saveWash = async (method) => {
             const p = document.getElementById('plate'), pr = document.getElementById('wash-price'), cd = document.getElementById('car-desc');
-            if(!p.value || !pr.value) return alert("Plate & Price required");
+            if(!p.value || !pr.value) return alert("Fill Plate & Price");
             await addDoc(collection(db, "entries"), {
                 category: "wash", plate: p.value.toUpperCase(), car_desc: cd.value, amount: parseFloat(pr.value),
                 wash_type: document.getElementById('wash-type').value || "Standard",
@@ -311,7 +313,7 @@
 
         window.saveExpense = async () => {
             const a = document.getElementById('exp-amt'), d = document.getElementById('exp-desc');
-            if(!a.value || !d.value) return alert("Expense details required");
+            if(!a.value || !d.value) return alert("Fill Expense Info");
             await addDoc(collection(db, "entries"), {
                 category: "expense", amount: parseFloat(a.value), description: d.value,
                 timestamp: serverTimestamp(), dateStr: new Date().toISOString().split('T')[0]
