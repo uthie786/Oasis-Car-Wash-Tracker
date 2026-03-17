@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Oasis Tracker Pro</title>
+    <style>
+        .view-hidden { display: none !important; }
+        .pin-btn { background: #1e293b; color: white; padding: 20px; border-radius: 15px; font-weight: bold; font-size: 1.5rem; transition: all 0.1s; }
+        .pin-btn:active { background: #334155; transform: scale(0.9); }
+    </style>
+</head>
+<body class="bg-slate-50 pb-24 text-slate-900">
+
+    <div id="view-lock" class="fixed inset-0 bg-slate-950 z-[100] flex flex-col items-center justify-center p-6">
+        <div class="text-center mb-10">
+            <h1 class="text-3xl font-black text-blue-500 uppercase tracking-tighter mb-2">Oasis Secure</h1>
+            <p class="text-slate-500 text-[10px] uppercase font-bold tracking-[0.3em]">Access Required</p>
+        </div>
+        
+        <div class="flex gap-6 mb-12">
+            <div id="dot-1" class="w-4 h-4 rounded-full border-2 border-slate-800 transition-all duration-200"></div>
+            <div id="dot-2" class="w-4 h-4 rounded-full border-2 border-slate-800 transition-all duration-200"></div>
+            <div id="dot-3" class="w-4 h-4 rounded-full border-2 border-slate-800 transition-all duration-200"></div>
+            <div id="dot-4" class="w-4 h-4 rounded-full border-2 border-slate-800 transition-all duration-200"></div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4 w-full max-w-[320px]">
+            <button onclick="pressPin('1')" class="pin-btn">1</button>
+            <button onclick="pressPin('2')" class="pin-btn">2</button>
+            <button onclick="pressPin('3')" class="pin-btn">3</button>
+            <button onclick="pressPin('4')" class="pin-btn">4</button>
+            <button onclick="pressPin('5')" class="pin-btn">5</button>
+            <button onclick="pressPin('6')" class="pin-btn">6</button>
+            <button onclick="pressPin('7')" class="pin-btn">7</button>
+            <button onclick="pressPin('8')" class="pin-btn">8</button>
+            <button onclick="pressPin('9')" class="pin-btn">9</button>
+            <button onclick="clearPin()" class="pin-btn text-red-500">C</button>
+            <button onclick="pressPin('0')" class="pin-btn">0</button>
+            <button onclick="pressPin('back')" class="pin-btn">←</button>
+        </div>
+    </div>
+
+    <div id="main-app" class="view-hidden">
+        <div class="bg-slate-900 p-5 text-white shadow-xl sticky top-0 z-30">
+            <div class="flex justify-between items-center mb-4">
+                <h1 class="text-lg font-black uppercase tracking-tighter text-blue-400">Oasis Tracker</h1>
+                <div class="flex gap-2">
+                    <button onclick="switchView('log')" id="btn-log" class="text-[10px] font-bold px-3 py-1 rounded-full bg-blue-600">LOG</button>
+                    <button onclick="switchView('reports')" id="btn-reports" class="text-[10px] font-bold px-3 py-1 rounded-full bg-slate-700">REPORTS</button>
+                    <button onclick="location.reload()" class="text-[10px] font-bold px-3 py-1 rounded-full bg-red-900/40 text-red-300">LOCK</button>
+                </div>
+            </div>
+            
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-[10px] font-bold uppercase text-slate-500">Transaction Date</span>
+                <input type="date" id="view-date" class="bg-slate-800 text-white text-xs p-1 px-2 rounded border border-slate-700 outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 border-t border-slate-800 pt-4">
+                <div class="bg-emerald-900/20 p-3 rounded-2xl border border-emerald-500/20 text-center">
+                    <p class="text-[9px] uppercase font-bold text-emerald-500 mb-1">Cash In Till</p>
+                    <p id="sum-cash-till" class="font-black text-2xl text-emerald-400">R0</p>
+                </div>
+                <div class="bg-blue-900/20 p-3 rounded-2xl border border-blue-500/20 text-center">
+                    <p class="text-[9px] uppercase font-bold text-blue-400 mb-1">Net Profit</p>
+                    <p id="sum-net-profit" class="font-black text-2xl text-blue-400">R0</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-log" class="p-4 max-w-md mx-auto space-y-6">
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200">
+                <input type="text" id="plate" placeholder="NUMBER PLATE" class="w-full p-4 border-2 border-slate-100 rounded-2xl mb-3 bg-slate-50 uppercase font-mono text-2xl text-center focus:border-blue-500 outline-none">
+                <input type="text" id="car-desc" placeholder="Car (e.g. White Toyota Camry)" class="w-full p-3 border-2 border-slate-100 rounded-2xl mb-3 bg-slate-50 text-sm focus:border-blue-500 outline-none">
+                <div class="flex gap-2 mb-4">
+                    <input type="number" id="wash-price" placeholder="Price" class="w-1/3 p-4 border-2 border-slate-100 rounded-2xl bg-slate-50 font-bold text-blue-600">
+                    <input type="text" id="wash-type" placeholder="Type (Full/Valet)" class="w-2/3 p-4 border-2 border-slate-100 rounded-2xl bg-slate-50">
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="saveWash('Cash')" class="flex-1 bg-emerald-500 text-white py-5 rounded-2xl font-black shadow-lg">CASH</button>
+                    <button onclick="saveWash('Card')" class="flex-1 bg-blue-600 text-white py-5 rounded-2xl font-black shadow-lg">CARD</button>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-3xl shadow-sm border border-slate-200">
+                <div class="flex gap-2">
+                    <input type="number" id="exp-amt" placeholder="R" class="w-1/4 p-3 border-2 border-slate-100 rounded-xl bg-slate-50">
+                    <input type="text" id="exp-desc" placeholder="Expense description" class="w-3/4 p-3 border-2 border-slate-100 rounded-xl bg-slate-50">
+                </div>
+                <button onclick="saveExpense()" class="w-full mt-3 bg-slate-800 text-white py-3 rounded-xl font-bold text-xs uppercase">Record Cash Expense</button>
+            </div>
+            <div id="history-list" class="space-y-3 pb-10"></div>
+        </div>
+
+        <div id="view-reports" class="p-4 max-w-md mx-auto space-y-4 view-hidden">
+            <div id="month-navigation">
+                <button id="btn-back-reports" onclick="renderMonthList()" class="view-hidden mb-4 flex items-center gap-2 text-blue-600 font-bold text-xs uppercase">
+                    <span>← Back to Months</span>
+                </button>
+                
+                <h2 id="reports-title" class="text-[10px] font-black uppercase text-slate-400 tracking-widest px-2 pb-2">Business Archives</h2>
+                
+                <div id="reports-content" class="space-y-3">
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc, query, where, onSnapshot, serverTimestamp, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDNHP598rkNgm-W04rcQ7_c5jZ3JzMasfg",
+            authDomain: "oasis-carwash.firebaseapp.com",
+            projectId: "oasis-carwash",
+            storageBucket: "oasis-carwash.firebasestorage.app",
+            messagingSenderId: "1072301320709",
+            appId: "1:1072301320709:web:c0924a8a570f911f1b8a6c"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        let unsubscribeLog = null;
+        let globalData = {}; 
+
+        // --- PIN LOGIC ---
+        const MASTER_PIN = "1234"; // CHANGE PIN HERE
+        let currentPin = "";
+
+        window.pressPin = (num) => {
+            if (num === 'back') currentPin = currentPin.slice(0, -1);
+            else if (currentPin.length < 4) currentPin += num;
+            updatePinDots();
+            if (currentPin.length === 4) {
+                if (currentPin === MASTER_PIN) {
+                    document.getElementById('view-lock').classList.add('view-hidden');
+                    document.getElementById('main-app').classList.remove('view-hidden');
+                    initApp();
+                } else {
+                    setTimeout(() => { alert("Incorrect PIN"); window.clearPin(); }, 100);
+                }
+            }
+        };
+
+        window.clearPin = () => { currentPin = ""; updatePinDots(); };
+        function updatePinDots() {
+            for (let i = 1; i <= 4; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                dot.style.backgroundColor = currentPin.length >= i ? '#60a5fa' : 'transparent';
+                dot.style.borderColor = currentPin.length >= i ? '#60a5fa' : '#334155';
+            }
+        }
+
+        function initApp() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('view-date').value = today;
+            loadDayData(today);
+        }
+
+        window.switchView = (view) => {
+            document.getElementById('view-log').classList.toggle('view-hidden', view !== 'log');
+            document.getElementById('view-reports').classList.toggle('view-hidden', view !== 'reports');
+            document.getElementById('btn-log').className = `text-[10px] font-bold px-3 py-1 rounded-full ${view === 'log' ? 'bg-blue-600' : 'bg-slate-700'}`;
+            document.getElementById('btn-reports').className = `text-[10px] font-bold px-3 py-1 rounded-full ${view === 'reports' ? 'bg-blue-600' : 'bg-slate-700'}`;
+            if(view === 'reports') processAndRenderReports();
+        };
+
+        const loadDayData = (selectedDate) => {
+            if (unsubscribeLog) unsubscribeLog();
+            const q = query(collection(db, "entries"), where("dateStr", "==", selectedDate), orderBy("timestamp", "desc"));
+            unsubscribeLog = onSnapshot(q, (snapshot) => {
+                let totalSales = 0, cashSales = 0, manualExpenses = 0, staffPoolTotal = 0, washCount = 0;
+                let html = "";
+                snapshot.forEach((snapDoc) => {
+                    const data = snapDoc.data();
+                    if(data.category === "wash") {
+                        washCount++; totalSales += data.amount;
+                        staffPoolTotal += (data.amount * 0.30);
+                        if(data.payment === "Cash") cashSales += data.amount;
+                        html += `<div class="bg-white p-4 rounded-2xl shadow-sm border-l-4 ${data.payment === 'Cash' ? 'border-emerald-500' : 'border-blue-500'} flex justify-between items-center mb-2">
+                                    <div>
+                                        <p class="font-black text-lg uppercase leading-none">${data.plate}</p>
+                                        <p class="text-[10px] text-slate-600 font-bold mt-1 capitalize">${data.car_desc || ''}</p>
+                                        <p class="text-[9px] text-slate-400 font-bold uppercase mt-1">${data.payment} • ${data.wash_type || 'Wash'}</p>
+                                    </div>
+                                    <div class="text-right font-bold">R${data.amount}<br><button onclick="deleteEntry('${snapDoc.id}')" class="text-[9px] text-red-300">Delete</button></div>
+                                 </div>`;
+                    } else {
+                        manualExpenses += data.amount;
+                        html += `<div class="bg-red-50 p-4 rounded-2xl border-l-4 border-red-400 flex justify-between items-center mb-2">
+                                    <p class="font-bold text-red-800 uppercase text-xs">${data.description}</p>
+                                    <div class="text-right font-bold text-red-600">-R${data.amount}<br><button onclick="deleteEntry('${snapDoc.id}')" class="text-[9px] text-red-300">Delete</button></div>
+                                 </div>`;
+                    }
+                });
+                const utilityTotal = washCount * 10;
+                document.getElementById('sum-cash-till').innerText = `R${(cashSales - staffPoolTotal - manualExpenses).toFixed(0)}`;
+                document.getElementById('sum-net-profit').innerText = `R${(totalSales - staffPoolTotal - manualExpenses - utilityTotal).toFixed(0)}`;
+                document.getElementById('history-list').innerHTML = html || '<p class="text-center text-slate-400 py-10 text-xs italic tracking-widest uppercase">No Activity</p>';
+            });
+        };
+
+        const processAndRenderReports = async () => {
+            const content = document.getElementById('reports-content');
+            content.innerHTML = '<p class="text-center py-10 text-slate-400 text-xs animate-pulse tracking-widest uppercase">Reading Archives...</p>';
+            
+            const q = query(collection(db, "entries"), orderBy("timestamp", "desc"));
+            const snap = await getDocs(q);
+            
+            const months = {}; 
+
+            snap.forEach(doc => {
+                const data = doc.data();
+                const dayStr = data.dateStr;
+                if(!dayStr) return;
+                const monthStr = dayStr.slice(0, 7); 
+
+                if(!months[monthStr]) months[monthStr] = { days: {} };
+                if(!months[monthStr].days[dayStr]) months[monthStr].days[dayStr] = { sales: 0, cash: 0, exp: 0, count: 0, comm: 0 };
+
+                const d = months[monthStr].days[dayStr];
+                if(data.category === 'wash') {
+                    d.sales += data.amount; d.count++; d.comm += (data.amount * 0.30);
+                    if(data.payment === 'Cash') d.cash += data.amount;
+                } else d.exp += data.amount;
+            });
+
+            globalData = months;
+            window.renderMonthList();
+        };
+
+        window.renderMonthList = () => {
+            const content = document.getElementById('reports-content');
+            const backBtn = document.getElementById('btn-back-reports');
+            const title = document.getElementById('reports-title');
+            
+            backBtn.classList.add('view-hidden');
+            title.innerText = "Business Archives";
+            
+            let html = "";
+            Object.keys(globalData).sort().reverse().forEach(m => {
+                let mProfit = 0, mWashes = 0, mExp = 0;
+                Object.keys(globalData[m].days).forEach(day => {
+                    const d = globalData[m].days[day];
+                    mProfit += (d.sales - d.comm - d.exp - (d.count * 10));
+                    mWashes += d.count;
+                    mExp += d.exp;
+                });
+
+                const monthName = new Date(m + "-01").toLocaleString('default', { month: 'long', year: 'numeric' });
+                
+                html += `
+                    <button onclick="renderDayList('${m}')" class="w-full bg-white p-5 rounded-3xl flex justify-between items-center border border-slate-200 shadow-sm active:scale-[0.98] transition-all">
+                        <div class="text-left">
+                            <p class="font-black text-slate-800 uppercase text-sm">${monthName}</p>
+                            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">${mWashes} Washes • <span class="text-red-400">Ex: R${mExp.toFixed(0)}</span></p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[10px] font-bold text-blue-600">Net: R${mProfit.toFixed(0)}</p>
+                            <p class="text-[9px] font-black text-slate-300 tracking-widest mt-1 uppercase">Open →</p>
+                        </div>
+                    </button>`;
+            });
+            content.innerHTML = html || '<p class="text-center py-10 text-slate-400 text-xs">NO DATA FOUND</p>';
+        };
+
+        window.renderDayList = (monthKey) => {
+            const content = document.getElementById('reports-content');
+            const backBtn = document.getElementById('btn-back-reports');
+            const title = document.getElementById('reports-title');
+            
+            backBtn.classList.remove('view-hidden');
+            title.innerText = "Breakdown: " + monthKey;
+
+            const days = globalData[monthKey].days;
+            let html = "";
+            Object.keys(days).sort().reverse().forEach(date => {
+                const d = days[date];
+                const profit = d.sales - d.comm - d.exp - (d.count * 10);
+                const till = d.cash - d.comm - d.exp;
+                
+                html += `
+                    <div class="bg-white p-4 rounded-2xl flex justify-between items-center border border-slate-200 shadow-sm">
+                        <div><p class="font-black text-xs text-slate-800">${date}</p>
+                             <p class="text-[9px] text-red-500 font-bold uppercase">Expense: R${d.exp.toFixed(0)}</p>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="text-right"><p class="text-[8px] uppercase text-slate-400 font-bold">Till</p><p class="text-xs font-black text-emerald-600">R${till.toFixed(0)}</p></div>
+                            <div class="text-right"><p class="text-[8px] uppercase text-slate-400 font-bold">Profit</p><p class="text-xs font-black text-blue-600">R${profit.toFixed(0)}</p></div>
+                        </div>
+                    </div>`;
+            });
+            content.innerHTML = html;
+        };
+
+        window.deleteEntry = async (id) => { if(confirm("Confirm Delete?")) await deleteDoc(doc(db, "entries", id)); };
+
+        window.saveWash = async (method) => {
+            const p = document.getElementById('plate'), pr = document.getElementById('wash-price'), cd = document.getElementById('car-desc');
+            if(!p.value || !pr.value) return alert("Plate & Price required");
+            await addDoc(collection(db, "entries"), {
+                category: "wash", plate: p.value.toUpperCase(), car_desc: cd.value, amount: parseFloat(pr.value),
+                wash_type: document.getElementById('wash-type').value || "Standard",
+                payment: method, timestamp: serverTimestamp(), dateStr: new Date().toISOString().split('T')[0]
+            });
+            p.value = ""; pr.value = ""; cd.value = "";
+        };
+
+        window.saveExpense = async () => {
+            const a = document.getElementById('exp-amt'), d = document.getElementById('exp-desc');
+            if(!a.value || !d.value) return alert("Expense details required");
+            await addDoc(collection(db, "entries"), {
+                category: "expense", amount: parseFloat(a.value), description: d.value,
+                timestamp: serverTimestamp(), dateStr: new Date().toISOString().split('T')[0]
+            });
+            a.value = ""; d.value = "";
+        };
+
+        document.getElementById('view-date').addEventListener('change', (e) => loadDayData(e.target.value));
+    </script>
+</body>
+</html>
